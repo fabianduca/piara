@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Piara · Inteligencia climática para criaderos porcinos</title>
+<meta name="description" content="Piara previene pérdidas en criaderos de cerdos: alertas de estrés térmico, lluvia y frío, seguimiento de rendimiento, reproducción, agua y sanidad." />
+<meta name="theme-color" content="#1b201d" />
+<meta property="og:title" content="Piara · Inteligencia climática para criaderos porcinos" />
+<meta property="og:description" content="Previene pérdidas por clima, mejora el rendimiento y ordena la producción porcina." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%96%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="src/styles.css" />
+</head>
+<body>
+
+<!-- ===== Pantalla de login / registro ===== -->
+<div id="authView" class="auth-view">
+  <div class="auth-card">
+    <div class="brand big"><span class="logo">🐖</span><div><h1>Piara</h1><p class="tag">Inteligencia climática para criaderos porcinos</p></div></div>
+    <div class="auth-tabs">
+      <button class="tab active" data-tab="login">Ingresar</button>
+      <button class="tab" data-tab="register">Crear cuenta</button>
+    </div>
+
+    <form id="loginForm" class="auth-form">
+      <label>Email<input type="email" name="email" required placeholder="tu@criadero.com" /></label>
+      <label>Contraseña<input type="password" name="password" required /></label>
+      <button type="submit" class="btn primary">Ingresar</button>
+      <p class="auth-err" id="loginErr"></p>
+    </form>
+
+    <form id="registerForm" class="auth-form hidden">
+      <label>Nombre del criadero<input name="criadero" required placeholder="Criadero San Andrés de Giles" /></label>
+      <label>Email<input type="email" name="email" required /></label>
+      <label>Contraseña<input type="password" name="password" required minlength="4" /></label>
+      <button type="submit" class="btn primary">Crear cuenta (prueba)</button>
+      <p class="auth-err" id="registerErr"></p>
+    </form>
+    <p class="auth-note">Plan Pro, USD 200/mes. Prevención de pérdidas por clima, estrés térmico y alimentación.</p>
+  </div>
+</div>
+
+<!-- ===== App ===== -->
+<div id="appView" class="hidden">
+  <header class="topbar">
+    <div class="topbar-row">
+      <div class="brand"><span class="logo">🐖</span><div><h1>Piara</h1><p class="tag" id="tenantName"></p></div></div>
+      <div class="topbar-actions">
+        <span id="clock" class="clock"></span>
+        <button id="logoutBtn" class="btn ghost">Salir</button>
+      </div>
+    </div>
+    <div class="location">
+      <select id="siteSelect"></select>
+      <nav class="nav">
+        <button class="navbtn active" data-view="dashboard">Panel</button>
+        <button class="navbtn" data-view="production">Producción</button>
+        <button class="navbtn" data-view="repro">Reproducción</button>
+        <button class="navbtn" data-view="water">Agua</button>
+        <button class="navbtn" data-view="feed">Alimento</button>
+        <button class="navbtn" data-view="health">Sanidad</button>
+        <button class="navbtn" data-view="meds">Medicamentos</button>
+        <button class="navbtn" data-view="movements">Movimientos</button>
+        <button class="navbtn" data-view="benchmark">Comparar</button>
+        <button class="navbtn" data-view="sensors">Sensores</button>
+        <button class="navbtn" data-view="notifications">Avisos</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="dashboardView">
+    <section id="statusHero" class="hero">
+      <div class="hero-main">
+        <div class="ith-badge" id="ithBadge"><span class="ith-value" id="ithValue">--</span><span class="ith-label">ITH exterior</span></div>
+        <div class="hero-text">
+          <h2 id="statusTitle">Cargando datos climáticos…</h2>
+          <p id="statusDesc">Conectando con estaciones meteorológicas.</p>
+          <div class="now-metrics" id="nowMetrics"></div>
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="risk-item"><span>Estrés térmico</span><b id="riskHeat">--</b></div>
+        <div class="risk-item"><span>Lluvia / anegamiento</span><b id="riskRain">--</b></div>
+        <div class="risk-item"><span>Frío (lechones)</span><b id="riskCold">--</b></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 4.2 2.9 17a2 2 0 0 0 1.7 3h14.8a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>Alertas activas y acciones recomendadas</h3><span class="muted" id="alertCount"></span></div>
+      <div id="alerts" class="alerts"></div>
+    </section>
+
+    <div class="grid-2">
+      <section class="panel">
+        <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m7 14 4-4 3 3 5-6"/></svg>Pronóstico ITH próximas 48 h</h3></div>
+        <div class="chart" id="ithChart"></div>
+        <div class="legend">
+          <span><i class="dot ok"></i>Confort (&lt;74)</span>
+          <span><i class="dot warn"></i>Alerta (74–78)</span>
+          <span><i class="dot danger"></i>Peligro (79–83)</span>
+          <span><i class="dot emergency"></i>Emergencia (≥84)</span>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Optimizador de alimentación (hoy)</h3></div>
+        <p class="muted small">El cerdo come menos con calor. Movemos la ración a las horas frescas para no perder ganancia de peso.</p>
+        <div id="feedTimeline" class="feed-timeline"></div>
+        <div id="feedAdvice" class="feed-advice"></div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg>Galpones / sectores</h3><span class="muted">ITH ajustado por categoría; usa sensor interior si está disponible</span></div>
+      <div id="sheds" class="sheds"></div>
+    </section>
+
+    <div class="grid-2">
+      <section class="panel">
+        <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6.5" width="19" height="11" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Impacto económico evitable (próximas 24 h)</h3></div>
+        <div class="econ" id="econ"></div>
+        <p class="muted small">Cada punto de ITH sobre 74 reduce consumo y ganancia diaria. Editable con tus datos reales.</p>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>Satélite y suelo</h3></div>
+        <div id="soilPanel" class="soil-panel"></div>
+        <p class="muted small">Humedad de suelo derivada de datos satelitales (Open-Meteo). Anticipa anegamiento de callejones y corrales. Fase 2: imágenes multiespectrales (Satellogic) para pasturas y NDVI.</p>
+      </section>
+    </div>
+  </main>
+
+  <!-- Vista de sensores -->
+  <main id="sensorsView" class="hidden">
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4"/><path d="M4.9 4.9a10 10 0 0 0 0 14.2"/><path d="M19.1 4.9a10 10 0 0 1 0 14.2"/></svg>Sensores por galpón</h3><span class="muted">Temperatura y humedad dentro del galpón (más precisos que el clima exterior)</span></div>
+      <div id="deviceList" class="devices"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Dar de alta un sensor</h3></div>
+      <form id="deviceForm" class="inline-form">
+        <select id="deviceShed"></select>
+        <input id="deviceName" placeholder="Nombre (ej: Sensor Engorde A)" />
+        <button class="btn primary" type="submit">Generar sensor + API key</button>
+      </form>
+      <div id="deviceCreated" class="device-created hidden"></div>
+      <div class="hint">
+        <b>¿Cómo conecta el hardware?</b> Un ESP32/LoRa con sensor de temperatura y humedad (ej. DHT22/SHT31)
+        hace un POST cada pocos minutos. Sin sensores todavía podés demostrarlo con el simulador:
+        <code>npm run simulate</code>
+      </div>
+    </section>
+  </main>
+
+  <!-- Vista de producción / rendimiento -->
+  <main id="productionView" class="hidden">
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M7 21V11"/><path d="M12 21V5"/><path d="M17 21v-8"/></svg>Rendimiento de lotes</h3><span class="muted">Ganancia diaria, índice de conversión, mortandad y pérdida vs. objetivo</span></div>
+      <div class="econ" id="prodRollup"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Nuevo lote</h3></div>
+      <form id="batchForm" class="batch-form">
+        <select id="batchShed" title="Galpón"></select>
+        <input id="batchName" placeholder="Nombre del lote (ej: Lote Marzo A)" />
+        <label class="f">Ingreso<input id="batchDate" type="date" /></label>
+        <label class="f">Animales<input id="batchAnimals" type="number" min="1" placeholder="900" /></label>
+        <label class="f">Peso entrada (kg)<input id="batchWin" type="number" step="0.1" placeholder="25" /></label>
+        <label class="f">Peso objetivo (kg)<input id="batchWtarget" type="number" step="0.1" value="110" /></label>
+        <button class="btn primary" type="submit">Crear lote</button>
+      </form>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>Lotes</h3></div>
+      <div id="batchList" class="batch-list"></div>
+    </section>
+  </main>
+
+  <!-- Vista reproducción -->
+  <main id="reproView" class="hidden">
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Calendario reproductivo</h3><span class="muted">Gestación 114 días · anticipa partos y prepara la maternidad</span></div>
+      <div class="econ" id="reproRollup"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Registrar servicio</h3></div>
+      <form id="matingForm" class="inline-form">
+        <select id="matingShed" title="Galpón"></select>
+        <input id="matingSow" placeholder="Caravana de la cerda (ej: 214)" />
+        <label class="f">Fecha servicio<input id="matingDate" type="date" /></label>
+        <button class="btn primary" type="submit">Registrar</button>
+      </form>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>Servicios y partos</h3></div>
+      <div id="matingList" class="mating-list"></div>
+    </section>
+  </main>
+
+  <!-- Vista agua -->
+  <main id="waterView" class="hidden">
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5s6.5 6.7 6.5 10.5a6.5 6.5 0 0 1-13 0C5.5 10.2 12 3.5 12 3.5z"/></svg>Consumo de agua</h3><span class="muted">La caída del agua es la señal más temprana de enfermedad o calor</span></div>
+      <div id="waterList" class="water-list"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Cargar consumo del día</h3></div>
+      <form id="waterForm" class="inline-form">
+        <select id="waterShed" title="Galpón"></select>
+        <input id="waterLiters" type="number" step="1" placeholder="litros del día" />
+        <label class="f">Día<input id="waterDay" type="date" /></label>
+        <button class="btn primary" type="submit">Guardar</button>
+      </form>
+      <div class="hint">También podés automatizarlo: un caudalímetro conectado al ESP32 postea a <code>/api/ingest</code> con <code>{ "water_l": 4200 }</code>.</div>
+    </section>
+  </main>
+
+  <!-- Vista de alimento / stock -->
+  <main id="feedView" class="hidden">
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V8l8-4 8 4v12"/><path d="M4 12h16M9 20v-6h6v6"/></svg>Stock de alimento</h3><span class="muted">El alimento es el mayor costo: no te quedes sin balanceado</span></div>
+      <div class="econ" id="feedRollup"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Registrar movimiento</h3><span class="muted small">Ingreso = compra que entra · Egreso = consumo o merma</span></div>
+      <form id="feedForm" class="inline-form">
+        <select id="feedKind" title="Tipo">
+          <option value="ingreso">Ingreso (compra)</option>
+          <option value="egreso">Egreso (consumo)</option>
+        </select>
+        <input id="feedKg" type="number" step="1" placeholder="kilogramos" />
+        <input id="feedNote" placeholder="nota (opcional): proveedor, lote…" />
+        <button class="btn primary" type="submit">Registrar</button>
+      </form>
+    </section>
+    <section class="panel owner-only">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg>Configuración del stock</h3></div>
+      <form id="feedConfigForm" class="inline-form">
+        <label class="f">Avisar cuando baje de (kg)<input id="feedLowKg" type="number" step="1" placeholder="ej: 3000" /></label>
+        <label class="f" style="flex-direction:row;align-items:center;gap:8px"><input id="feedAuto" type="checkbox" /> Descontar automático desde el alimento cargado en cada lote</label>
+        <button class="btn primary" type="submit">Guardar</button>
+      </form>
+      <div class="hint">Con el descuento automático activado, cada vez que subís el alimento acumulado de un lote se resta del stock. Con el modo manual, cargás vos los egresos.</div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>Movimientos recientes</h3></div>
+      <div id="feedMoves" class="notif-list"></div>
+    </section>
+  </main>
+
+  <!-- Vista sanidad -->
+  <main id="healthView" class="hidden">
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>Plan sanitario y vacunación</h3><span class="muted">Vencimientos a la vista para no saltear una vacuna</span></div>
+      <div class="econ" id="healthRollup"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Nuevo evento sanitario</h3><span class="muted small" id="healthSuggest"></span></div>
+      <form id="healthForm" class="batch-form">
+        <select id="healthShed" title="Galpón"></select>
+        <input id="healthTitle" placeholder="Ej: Parvovirus + Leptospira" />
+        <select id="healthKind">
+          <option value="vacuna">Vacuna</option>
+          <option value="tratamiento">Tratamiento</option>
+          <option value="desparasitacion">Desparasitación</option>
+          <option value="revision">Revisión</option>
+        </select>
+        <input id="healthProduct" placeholder="Producto (opcional)" />
+        <label class="f">Próxima fecha<input id="healthDue" type="date" /></label>
+        <button class="btn primary" type="submit">Agendar</button>
+      </form>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>Calendario</h3></div>
+      <div id="healthList" class="mating-list"></div>
+    </section>
+  </main>
+
+  <!-- Vista de medicamentos / stock sanitario -->
+  <main id="medsView" class="hidden">
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M8 8V6a4 4 0 0 1 8 0v2M9 14h6"/></svg>Stock de medicamentos</h3><span class="muted">Vacunas, antibióticos y desparasitarios: no quedarte sin lo que el plan sanitario necesita</span></div>
+      <form id="medItemForm" class="inline-form">
+        <input id="medName" placeholder="Producto (ej: Ivermectina)" />
+        <select id="medUnit" title="Unidad">
+          <option value="dosis">dosis</option>
+          <option value="ml">ml</option>
+          <option value="frascos">frascos</option>
+          <option value="unidades">unidades</option>
+        </select>
+        <label class="f">Avisar bajo<input id="medLow" type="number" step="1" placeholder="umbral" /></label>
+        <button class="btn primary" type="submit">Agregar producto</button>
+      </form>
+      <div class="hint">La dosificación la define el veterinario; Piara solo lleva el inventario. Cargá ingresos (compras) y egresos (aplicaciones/mermas) por producto.</div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>Productos en stock</h3></div>
+      <div id="medList" class="water-list"></div>
+    </section>
+  </main>
+
+  <!-- Vista de movimientos de animales -->
+  <main id="movementsView" class="hidden">
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h13M13 6l6 6-6 6"/></svg>Movimientos de animales</h3><span class="muted">Traslados entre galpones, ventas y bajas — actualiza el conteo de cada galpón</span></div>
+      <form id="movementForm" class="inline-form">
+        <select id="moveReason" title="Motivo">
+          <option value="traslado">Traslado entre galpones</option>
+          <option value="venta">Venta (salida)</option>
+          <option value="baja">Baja / muerte (salida)</option>
+        </select>
+        <select id="moveFrom" title="Desde"></select>
+        <select id="moveTo" title="Hacia"></select>
+        <input id="moveQty" type="number" step="1" placeholder="cantidad" style="max-width:120px" />
+        <input id="moveNote" placeholder="nota (opcional)" />
+        <button class="btn primary" type="submit">Registrar</button>
+      </form>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>Historial de movimientos</h3></div>
+      <div id="movementList" class="notif-list"></div>
+    </section>
+  </main>
+
+  <!-- Vista comparar / benchmark -->
+  <main id="benchmarkView" class="hidden">
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>Comparar galpones y lotes</h3><span class="muted">Dónde estás perdiendo rendimiento, de un vistazo</span></div>
+      <div class="table-wrap"><table id="benchTable" class="bench"></table></div>
+      <p class="muted small">Verde = mejor que el objetivo · rojo = por debajo. El objetivo de ganancia diaria es 0,85 kg/d y el de conversión 2,8.</p>
+    </section>
+  </main>
+
+  <!-- Vista de avisos / WhatsApp -->
+  <main id="notificationsView" class="hidden">
+    <section class="panel owner-only">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10.5 19a2 2 0 0 0 3 0"/></svg>Avisos por WhatsApp</h3><span class="muted" id="notifierStatus"></span></div>
+      <p class="muted small">Cuando se dispara una alerta severa, Piara te avisa al WhatsApp. Configurá el número y desde qué nivel querés recibir avisos.</p>
+      <form id="whatsappForm" class="inline-form">
+        <input id="whatsappNumber" placeholder="+54 9 2325 ..." />
+        <select id="minSeverity">
+          <option value="1">Avisar desde: Alerta (leve)</option>
+          <option value="2" selected>Avisar desde: Peligro</option>
+          <option value="3">Avisar solo: Emergencia</option>
+        </select>
+        <button class="btn primary" type="submit">Guardar</button>
+        <button class="btn ghost" type="button" id="testNotifBtn">Enviar prueba</button>
+      </form>
+    </section>
+    <section class="panel owner-only" id="teamPanel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 6a3 3 0 0 1 0 6M21 20a6 6 0 0 0-4-5.6"/></svg>Equipo</h3><span class="muted">Dueño, veterinario y operario. El veterinario y el operario cargan datos; solo el dueño cambia la configuración.</span></div>
+      <form id="userForm" class="inline-form">
+        <input id="userEmail" type="email" placeholder="email del nuevo usuario" />
+        <input id="userPass" type="text" placeholder="contraseña inicial" />
+        <select id="userRole">
+          <option value="operario">Operario</option>
+          <option value="veterinario">Veterinario</option>
+          <option value="owner">Dueño</option>
+        </select>
+        <button class="btn primary" type="submit">Agregar</button>
+      </form>
+      <div id="userList" class="notif-list"></div>
+    </section>
+    <section class="panel owner-only">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Umbrales de estrés térmico (ITH)</h3><span class="muted small" id="thrDefaults"></span></div>
+      <p class="muted small">Ajustá desde qué ITH Piara marca confort, peligro y emergencia. Cambialos solo si tenés un criterio propio (genética, clima local); los valores por defecto son los estándar porcinos.</p>
+      <form id="thresholdsForm" class="inline-form">
+        <label class="f">Confort hasta<input id="thrComfort" type="number" step="1" /></label>
+        <label class="f">Peligro desde<input id="thrAlert" type="number" step="1" /></label>
+        <label class="f">Emergencia desde<input id="thrEmergency" type="number" step="1" /></label>
+        <button class="btn primary" type="submit">Guardar</button>
+        <button class="btn ghost" type="button" id="thrResetBtn">Volver al default</button>
+      </form>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Historial de avisos</h3></div>
+      <div id="notifList" class="notif-list"></div>
+    </section>
+  </main>
+
+  <footer><p>Piara MVP · Clima en vivo vía Open-Meteo, zona porcina de San Andrés de Giles.</p></footer>
+</div>
+
+<script src="src/shared/ith.js"></script>
+<script src="src/shared/production.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>

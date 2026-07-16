@@ -1,0 +1,9 @@
+node_modules/
+piara.db
+piara.db-*
+*.log
+.env
+.playwright-mcp/
+qa-*.png
+
+.claude/settings.local.json

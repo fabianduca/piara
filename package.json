@@ -1,0 +1,22 @@
+{
+  "name": "piara",
+  "version": "0.1.0",
+  "description": "Inteligencia climatica para criaderos porcinos — prevencion de perdidas por estres termico, lluvias y alimentacion",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node tools/seed.js",
+    "simulate": "node tools/sensor-simulator.js",
+    "test": "node tools/test-ith.js",
+    "docs:word": "node tools/md-to-docx.js docs/DOCUMENTACION.md docs/DOCUMENTACION.docx"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
