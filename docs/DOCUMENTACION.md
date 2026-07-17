@@ -172,8 +172,9 @@ Las lecturas fuera de rango físico (temp −30..55, humedad 0..100) se rechazan
 - **Verificación funcional:** todos los módulos nuevos (stock, meds, movimientos, roles,
   umbrales) probados por HTTP contra el server real.
 - No hay linter/typecheck ni build step (proyecto JS vanilla).
-- **Pendiente:** chequeo visual en navegador (Playwright / extensión de Chrome no disponibles en
-  las sesiones de desarrollo; todo lo demás verificado a nivel API y código).
+- **Chequeo visual en navegador (16/7): hecho.** Recorrido en Chrome (extensión de Claude) de
+  todas las vistas: panel con ITH en vivo, y las 4 nuevas (Alimento con ingreso probado 0→3000 kg,
+  Medicamentos, Movimientos, y Avisos con Equipo + Umbrales). Consola sin errores tras recarga.
 
 ## 10. Historial de QA y auditoría
 
@@ -213,7 +214,6 @@ permisos por rol (operario recibe 403 en config y 200 al cargar datos), responsi
 - **WhatsApp:** requiere cuenta de Twilio para envío real (sin ella, los avisos quedan en la app).
 - **Dosificación / criterios sanitarios:** los define el veterinario; Piara solo lleva inventario
   y calendario (no inventa umbrales veterinarios).
-- **Chequeo visual en navegador:** pendiente (ver sección 9).
 
 ## 12. Recomendaciones antes de publicar
 
@@ -223,7 +223,6 @@ permisos por rol (operario recibe 403 en config y 200 al cargar datos), responsi
 4. Dar de alta el equipo con sus roles.
 5. Integrar la pasarela de pago para la suscripción.
 6. Conectar Twilio para WhatsApp real.
-7. Correr el chequeo visual en navegador cuando esté disponible.
 
 ## 13. Qué falta / roadmap
 
